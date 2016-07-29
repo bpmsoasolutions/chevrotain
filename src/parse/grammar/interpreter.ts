@@ -220,7 +220,7 @@ export function possiblePathsFrom(targetDef:gast.IProduction[], maxLength:number
 
     function getAlternativesForProd(prod:gast.AbstractProduction) {
         let alternatives = possiblePathsFrom(remainingPathWith(prod.definition), maxLength, currPath)
-        return result.concat(alternatives)
+        return alternatives
     }
     /**
      * Mandatory productions will halt the loop as the paths computed from their recursive calls will already contain the
@@ -233,31 +233,32 @@ export function possiblePathsFrom(targetDef:gast.IProduction[], maxLength:number
         let prod = targetDef[i]
 
         if (prod instanceof gast.Flat) {
-            return getAlternativesForProd(prod)
+            return result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.NonTerminal) {
-            return getAlternativesForProd(prod)
+            return result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.Option) {
-            result = getAlternativesForProd(prod)
+            result = result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.RepetitionMandatory) {
-            return getAlternativesForProd(prod)
+            return result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.RepetitionMandatoryWithSeparator) {
-            return getAlternativesForProd(prod)
+            return result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.RepetitionWithSeparator) {
-            result = getAlternativesForProd(prod)
+            result = result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.Repetition) {
-            result = getAlternativesForProd(prod)
+            result = result.concat(getAlternativesForProd(prod))
         }
         else if (prod instanceof gast.Alternation) {
+            let altResult = []
             forEach(prod.definition, (currAlt) => {
-                result = getAlternativesForProd(currAlt)
+                altResult = altResult.concat(getAlternativesForProd(currAlt))
             })
-            return result
+            return result.concat(altResult)
         }
         else if (prod instanceof gast.Terminal) {
             currPath.push(prod.terminalType)

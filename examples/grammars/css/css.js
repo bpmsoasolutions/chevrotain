@@ -8,7 +8,9 @@
         module.exports = factory(require('chevrotain'), require("xregexp"));
     } else {
         // Browser globals (root is window)\
-        root["CssParser"] = factory(root.chevrotain, root.XRegExp).CssParser;
+        var factoryResult = factory(root.chevrotain, root.XRegExp)
+        root["CssParser"] = factoryResult.CssParser;
+        root["parseCss"] = factoryResult.parseCss;
     }
 }(this, function(chevrotain, XRegExp) {
 // ----------------- lexer -----------------
@@ -157,7 +159,7 @@
     // ----------------- parser -----------------
 
     function CssParser(input) {
-        Parser.call(this, input, cssTokens);
+        Parser.call(this, input, cssTokens, {maxLookahead:5});
         var $ = this;
 
         this.stylesheet = this.RULE('stylesheet', function() {
@@ -507,6 +509,10 @@
     CssParser.prototype = Object.create(Parser.prototype);
     CssParser.prototype.constructor = CssParser;
 
+
+    // if (module) {
+    //     var _ = require("lodash")
+    // }
     // TODO: repeating pattern for all grammar examples, factor out ?
     return {
 
@@ -519,6 +525,7 @@
 
             var parser = new CssParser(lexResult.tokens);
             parser.stylesheet();
+
             fullResult.parseErrors = parser.errors;
 
             return fullResult;

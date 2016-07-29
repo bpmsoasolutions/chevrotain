@@ -4,6 +4,7 @@ import {
     reject,
     find,
     every,
+    groupBy, forEach
 } from "../../utils/utils"
 
 import {gast} from "./gast_public"
@@ -96,6 +97,7 @@ export type lookAheadSequence = Function[][]
  */
 export function lookAheadSequenceFromAlternatives(alternatives:Alternative[]):lookAheadSequence[] {
 
+    // TODO: performance problem!
     function isUniquePrefix<T>(arr:T[][], item:T[]):boolean {
         return find(arr, (currOtherPath) => {
                 return every(item, (currPathTok, idx) =>
@@ -370,6 +372,10 @@ export function getLookaheadPathsForOptionalProd(occurrence:number,
     let afterDef = afterDefWalker.startWalking()
 
     let insidePaths = possiblePathsFrom(insideDef, k)
+
+    var groupedPaths = groupBy(insidePaths, (currPath) => {
+        return map(currPath, (tokClass) => tokClass.name).join("___")
+    })
     let afterPaths = possiblePathsFrom(afterDef, k)
 
     return lookAheadSequenceFromAlternatives([insidePaths, afterPaths])
