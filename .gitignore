@@ -12,3 +12,5 @@
 /sauce.json
 
 /npm-debug.log
+
+/test_integration/sanity/json_parser.min.js

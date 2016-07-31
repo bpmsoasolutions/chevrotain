@@ -31,6 +31,11 @@ var INSTALL_LINK_TEST = INSTALL_LINK + ' && ' + examples_test_command
 
 var banner = '/*! <%= pkg.name %> - v<%= pkg.version %> */'
 
+var jsonTokens = require('./test_integration/sanity/json_parser.js').jsonTokens
+var jsonTokenNames = jsonTokens.map(function(currTok) {
+    return currTok.name
+})
+
 module.exports = function(grunt) {
 
     var pkg = grunt.file.readJSON('package.json')
@@ -70,12 +75,19 @@ module.exports = function(grunt) {
                     cwd: process.cwd() + "/examples/language_services"
                 },
                 exec:    INSTALL_LINK + "&& grunt test"
+            },
+
+           integration_tests_all_minified: {
+                options: {
+                    cwd: process.cwd() + "/examples/language_services"
+                },
+                exec:    INSTALL_LINK + "&& grunt test"
             }
         },
 
         karma: {
             options: {
-                configFile:  'karma_sauce.conf.js',
+                configFile:  'karma.conf.js',
                 singleRun:   true,
                 client:      {
                     captureConsole: true
@@ -92,22 +104,13 @@ module.exports = function(grunt) {
                 }
             },
 
-            browsers_unit_tests_minified: {
-                options: {
-                    port:  9981,
-                    files: [
-                        'test/test.config.js',
-                        'lib/chevrotainSpecs.min.js'
-                    ]
-                }
-            },
-
             browsers_integration_tests_globals: {
                 options: {
                     port:  9982,
                     files: [
                         'lib/chevrotain.js',
                         'test/test.config.js',
+                        'test_integration/sanity/json_parser.js',
                         'test_integration/**/*spec.js'
                     ]
                 }
@@ -132,6 +135,7 @@ module.exports = function(grunt) {
                     files: [
                         'lib/chevrotain.min.js',
                         'test/test.config.js',
+                        'test_integration/sanity/json_parser.js',
                         'test_integration/**/*spec.js'
                     ]
                 }
@@ -146,6 +150,18 @@ module.exports = function(grunt) {
                         'test/test.config.js',
                         {pattern: 'test_integration/*/*.js', included: false},
                         'test_integration/integration_tests_main.js'
+                    ]
+                }
+            },
+
+            browsers_integration_tests_globals_all_minified: {
+                options: {
+                    port:       9985,
+                    files: [
+                        'lib/chevrotain.min.js',
+                        'test/test.config.js',
+                        'test_integration/sanity/json_parser.min.js',
+                        'test_integration/**/*spec.js'
                     ]
                 }
             }
@@ -337,20 +353,36 @@ module.exports = function(grunt) {
 
                 plugins: [
                     new webpack.BannerPlugin(banner, {raw: true}),
-                    new webpack.optimize.UglifyJsPlugin({
-                        mangle: {
-                            // because chevrotain relies on Function.name
-                            keep_fnames: true
-                        }
-                    })
+                    new webpack.optimize.UglifyJsPlugin()
                 ]
             },
 
-            specs_uglify: {
-                entry:  "./lib/test/all.js",
+            specs_integration_uglify: {
+                entry:  "./test_integration/sanity/json_parser_spec.js",
                 output: {
-                    path:     "lib/",
-                    filename: "chevrotainSpecs.min.js"
+                    path:     "test_integration/sanity//",
+                    filename: "integration_specs.min.js",
+                    libraryTarget:  "umd",
+                    externals: {
+                        "chevrotain": "chevrotain"
+                    }
+                },
+
+                plugins: [
+                    new webpack.optimize.UglifyJsPlugin()
+                ]
+            }
+        },
+
+        uglify: {
+            options: {
+                mangle: {
+                    except: jsonTokenNames
+                }
+            },
+            integration_tests_minified: {
+                files: {
+                    'test_integration/sanity/json_parser.min.js': ['test_integration/sanity/json_parser.js']
                 }
             }
         },
@@ -360,10 +392,6 @@ module.exports = function(grunt) {
                 src: 'dev/coverage/lcov.info'
             }
         },
-
-        exec: {
-            lang_services: 'node_modules/.bin/grunt --gruntfile examples/language_services/gruntfile.js test'
-        }
     })
 
     require('load-grunt-tasks')(grunt)
@@ -403,11 +431,11 @@ module.exports = function(grunt) {
 
     var browsers_tests = [
         'karma:browsers_unit_tests',
-        'karma:browsers_unit_tests_minified',
         'karma:browsers_integration_tests_globals',
         'karma:browsers_integration_tests_globals_minified',
         'karma:browsers_integration_tests_amd',
-        'karma:browsers_integration_tests_amd_minified'
+        'karma:browsers_integration_tests_amd_minified',
+        'karma:browsers_integration_tests_globals_all_minified'
     ]
 
     var buildTestTasks = buildTasks.concat(unitTestsTasks)

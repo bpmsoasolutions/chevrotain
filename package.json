@@ -57,6 +57,7 @@
     "grunt-cli": "~1.2.0",
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-uglify": "^2.0.0",
     "grunt-coveralls": "^1.0.1",
     "grunt-karma": "~2.0.0",
     "grunt-mocha-istanbul": "^5.0.1",
